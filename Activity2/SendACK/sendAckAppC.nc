@@ -37,7 +37,7 @@ implementation {
   App.Receive -> AMReceiverC;
 
   //Interfaces to access package fields
-  App.PacketAcknowledgements -> pAcks
+  App.PacketAcknowledgements -> pAcks;
 
   //Timer interface
   App.MilliTimer -> timer;
