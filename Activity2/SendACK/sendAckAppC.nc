@@ -43,7 +43,7 @@ implementation {
   App.MilliTimer -> timer;
 
   //Fake Sensor read
-  App.SensorRead -> fakeSensor.read;
+  App.Read -> fakeSensor.Read;
 
 }
 

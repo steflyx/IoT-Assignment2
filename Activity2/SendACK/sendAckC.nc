@@ -34,7 +34,7 @@ module sendAckC {
   uint8_t counter=0;
   uint8_t rec_id;
   message_t packet;
-  bool done = FALSE;
+  bool ackReceived = FALSE;
 
   void sendReq();
   void sendResp();
@@ -42,6 +42,7 @@ module sendAckC {
   
   //***************** Send request function ********************//
   //Stefano
+  //DONE
   void sendReq() {
 	/* This function is called when we want to send a request
 	 *
@@ -75,20 +76,16 @@ module sendAckC {
 	     dbg("radio_send", "Packet passed to lower layer successfully!\n");
 	     dbg("radio_pack",">>>Pack\n \t Payload length %hhu \n", call Packet.payloadLength( &packet ) );
 	     dbg_clear("radio_pack","\t Payload Sent\n" );
-		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->type);
-		 dbg_clear("radio_pack", "\t\t data: %hhu \n", msg->data);
+		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->msg_type);
+		 dbg_clear("radio_pack", "\t\t counter: %hhu \n", msg->msg_counter);
 		 
 	 }
 	 
-	 //Checks ACK	
-	 //Should we put this here or in sendDone? 
-	 if(call PacketAcknowledgements.wasAcked(msg) == TRUE)
-	 	done = TRUE;
 	 
  }        
 
   //****************** Task send response *****************//
-  //Luca
+  //DONE
   void sendResp() {
   	/* This function is called when we receive the REQ message.
   	 * Nothing to do here. 
@@ -100,10 +97,12 @@ module sendAckC {
 
   //***************** Boot interface ********************//
   //Stefano
+  //DONE
   event void Boot.booted() {
 	dbg("boot","Application booted.\n");
 	/* Fill it ... */
 	
+	call SplitControl.start();
 	
   }
 
@@ -111,20 +110,25 @@ module sendAckC {
   //Luca
   event void SplitControl.startDone(error_t err){
     /* Fill it ... */
+    
+    //Start the MilliTimer if TOS_NODE_ID == 1
   }
   
-  //Luca
+  //DONE
   event void SplitControl.stopDone(error_t err){
     /* Fill it ... */
   }
 
   //***************** MilliTimer interface ********************//
   //Stefano
+  //DONE
   event void MilliTimer.fired() {
 	/* This event is triggered every time the timer fires.
 	 * When the timer fires, we send a request
 	 * Fill this part...
 	 */
+	 
+	 sendReq();
   }
   
 
@@ -140,6 +144,11 @@ module sendAckC {
 	 * 2b. Otherwise, send again the request
 	 * X. Use debug statements showing what's happening (i.e. message fields)
 	 */
+	 
+	 
+	 //Checks ACK	
+	 if(call PacketAcknowledgements.wasAcked(msg) == TRUE)
+	 	done = TRUE;
   }
 
   //***************************** Receive interface *****************//
@@ -154,10 +163,13 @@ module sendAckC {
 	 * X. Use debug statements showing what's happening (i.e. message fields)
 	 */
 
+	//If you receive a REQ, update value of counter with msg->msg_counter
+
   }
   
   //************************* Read interface **********************//
   //Stefano
+  //DONE
   event void Read.readDone(error_t result, uint16_t data) {
 	/* This event is triggered when the fake sensor finish to read (after a Read.read()) 
 	 *
@@ -166,6 +178,25 @@ module sendAckC {
 	 * 2. Send back (with a unicast message) the response
 	 * X. Use debug statement showing what's happening (i.e. message fields)
 	 */
+	 
+	 my_msg_t* msg = (my_msg_t*)(call Pcket.getPayload(&packet, sizeof(my_msg));
+	 if (msg == NULL)
+	 	return;
+	 	
+	 msg->msg_type = RESP;
+	 msg->msg_counter = counter;
+	 msg->msg_value = data;
+	 
+	 dbg("radio_pack", "Preparing message... \n");
+	 
+	 if(call AMSend.send(1, &packet,sizeof(my_msg_t)) == SUCCESS){
+	     dbg("radio_send", "Packet passed to lower layer successfully!\n");
+	     dbg("radio_pack",">>>Pack\n \t Payload length %hhu \n", call Packet.payloadLength( &packet ) );
+	     dbg_clear("radio_pack","\t Payload Sent\n" );
+		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->msg_type);
+		 dbg_clear("radio_pack", "\t\t data: %hhu \n", msg->msg_data);
+		 
+	 }
 
 }
 
