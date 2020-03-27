@@ -34,6 +34,7 @@ module sendAckC {
   uint8_t counter=0;
   uint8_t rec_id;
   message_t packet;
+  bool done = FALSE;
 
   void sendReq();
   void sendResp();
@@ -70,7 +71,7 @@ module sendAckC {
 	 	dbg("ACK", "Set succesfully!\n");
 	 
 	 //UNICAST SEND
-	 if(call AMSend.send(0, &packet,sizeof(my_msg_t)) == SUCCESS){
+	 if(call AMSend.send(2, &packet,sizeof(my_msg_t)) == SUCCESS){
 	     dbg("radio_send", "Packet passed to lower layer successfully!\n");
 	     dbg("radio_pack",">>>Pack\n \t Payload length %hhu \n", call Packet.payloadLength( &packet ) );
 	     dbg_clear("radio_pack","\t Payload Sent\n" );
@@ -79,6 +80,10 @@ module sendAckC {
 		 
 	 }
 	 
+	 //Checks ACK	
+	 //Should we put this here or in sendDone? 
+	 if(call PacketAcknowledgements.wasAcked(msg) == TRUE)
+	 	done = TRUE;
 	 
  }        
 
@@ -98,6 +103,8 @@ module sendAckC {
   event void Boot.booted() {
 	dbg("boot","Application booted.\n");
 	/* Fill it ... */
+	
+	
   }
 
   //***************** SplitControl interface ********************//

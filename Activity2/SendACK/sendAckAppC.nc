@@ -19,9 +19,9 @@ implementation {
   components new AMSenderC(AM_SEND_MSG);
   components new AMReceiverC(AM_SEND_MSG);
   components ActiveMessageC;
-	components new TimerMilliC as timer;
-	components new FakeSensorC as fakeSensor
-	components new PacketAcknowledgements as pAcks
+  components new TimerMilliC() as timer;
+  components new FakeSensorC() as fakeSensor;
+  components new PacketAcknowledgements() as pAcks;
 
 
 /****** INTERFACES *****/
@@ -37,13 +37,13 @@ implementation {
   App.Receive -> AMReceiverC;
 
   //Interfaces to access package fields
-	App.PacketAcknowledgements -> pAcks
+  App.PacketAcknowledgements -> pAcks
 
   //Timer interface
-	App.TempTimer -> temp_t;
+  App.MilliTimer -> timer;
 
   //Fake Sensor read
-  App.SensorRead -> fakeSensor;
+  App.SensorRead -> fakeSensor.read;
 
 }
 
