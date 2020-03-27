@@ -18,6 +18,12 @@ module sendAckC {
     //interfaces for communication
 	//interface for timer
     //other interfaces, if needed
+    
+    interface Packet;
+    interface AMSend;
+    interface Receive;
+    interface PacketAcknowledgements;
+    
 	
 	//interface used to perform sensor reading (to get the value from a sensor)
 	interface Read<uint16_t>;
@@ -34,6 +40,7 @@ module sendAckC {
   
   
   //***************** Send request function ********************//
+  //Stefano
   void sendReq() {
 	/* This function is called when we want to send a request
 	 *
@@ -44,9 +51,39 @@ module sendAckC {
 	 * 3. Send an UNICAST message to the correct node
 	 * X. Use debug statements showing what's happening (i.e. message fields)
 	 */
+	 
+	 //Preparation of the REQ message
+	 my_msg_t* msg = (my_msg_t*)(call Pcket.getPayload(&packet, sizeof(my_msg));
+	 if (msg == NULL)
+	 	return;
+	 	
+	 msg->msg_type = REQ;
+	 msg->msg_counter = counter;
+	 msg->msg_value = 0;
+	 
+	 counter++;
+	 
+	 dbg("radio_req","Preparing REQ message... \n");
+	 
+	 //Set ACK for the message
+	 if(call PacketAcknowledgements.requestAck(msg) == SUCCESS)
+	 	dbg("ACK", "Set succesfully!\n");
+	 
+	 //UNICAST SEND
+	 if(call AMSend.send(0, &packet,sizeof(my_msg_t)) == SUCCESS){
+	     dbg("radio_send", "Packet passed to lower layer successfully!\n");
+	     dbg("radio_pack",">>>Pack\n \t Payload length %hhu \n", call Packet.payloadLength( &packet ) );
+	     dbg_clear("radio_pack","\t Payload Sent\n" );
+		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->type);
+		 dbg_clear("radio_pack", "\t\t data: %hhu \n", msg->data);
+		 
+	 }
+	 
+	 
  }        
 
   //****************** Task send response *****************//
+  //Luca
   void sendResp() {
   	/* This function is called when we receive the REQ message.
   	 * Nothing to do here. 
@@ -57,21 +94,25 @@ module sendAckC {
   }
 
   //***************** Boot interface ********************//
+  //Stefano
   event void Boot.booted() {
 	dbg("boot","Application booted.\n");
 	/* Fill it ... */
   }
 
   //***************** SplitControl interface ********************//
+  //Luca
   event void SplitControl.startDone(error_t err){
     /* Fill it ... */
   }
   
+  //Luca
   event void SplitControl.stopDone(error_t err){
     /* Fill it ... */
   }
 
   //***************** MilliTimer interface ********************//
+  //Stefano
   event void MilliTimer.fired() {
 	/* This event is triggered every time the timer fires.
 	 * When the timer fires, we send a request
@@ -81,6 +122,7 @@ module sendAckC {
   
 
   //********************* AMSend interface ****************//
+  //Luca
   event void AMSend.sendDone(message_t* buf,error_t err) {
 	/* This event is triggered when a message is sent 
 	 *
@@ -94,6 +136,7 @@ module sendAckC {
   }
 
   //***************************** Receive interface *****************//
+  //Luca
   event message_t* Receive.receive(message_t* buf,void* payload, uint8_t len) {
 	/* This event is triggered when a message is received 
 	 *
@@ -107,6 +150,7 @@ module sendAckC {
   }
   
   //************************* Read interface **********************//
+  //Stefano
   event void Read.readDone(error_t result, uint16_t data) {
 	/* This event is triggered when the fake sensor finish to read (after a Read.read()) 
 	 *
