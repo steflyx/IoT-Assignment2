@@ -72,9 +72,9 @@ module sendAckC {
 		 
 		 //Set ACK for the message
 		 if(call PacketAcknowledgements.requestAck(&packet) == SUCCESS)
-		 	 dbg("radio_send", "Set succesfully!\n");
+		 	 dbg("radio_send", "ACK set succesfully!\n");
 		 else
-		 	dbg("radio_send", "Set unsuccesfully\n");
+		 	dbg("radio_send", "ACK not set\n");
 		 
 		 //UNICAST SEND
 		 if(call AMSend.send(2, &packet,sizeof(my_msg_t)) == SUCCESS){
@@ -246,9 +246,9 @@ module sendAckC {
 	 
 	 //Set ACK for the message
 	 if(call PacketAcknowledgements.requestAck(&packet) == SUCCESS)
-	 	dbg("radio_send", "Set succesfully!\n");
+	 	dbg("radio_send", "ACK set succesfully!\n");
 	 else
-		dbg("radio_send", "Set unsuccesfully\n");
+		dbg("radio_send", "ACK not set\n");
 	 
 	 if(call AMSend.send(1, &packet,sizeof(my_msg_t)) == SUCCESS){
 	 	dbg("radio_send", "Packet passed to lower layer successfully!\n");
