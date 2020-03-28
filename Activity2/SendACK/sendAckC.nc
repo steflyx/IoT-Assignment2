@@ -28,7 +28,7 @@ module sendAckC {
     
 	
 	//interface used to perform sensor reading (to get the value from a sensor)
-		interface Read<uint16_t>;
+	interface Read<uint16_t>;
   }
 
 } implementation {
@@ -57,7 +57,7 @@ module sendAckC {
 		 */
 		 
 		 //Preparation of the REQ message
-		 my_msg_t* msg = (my_msg_t*)(call Packet.getPayload(&packet, sizeof(my_msg_t));
+		 my_msg_t* msg = (my_msg_t*)(call Packet.getPayload(&packet, sizeof(my_msg_t)));
 		 if (msg == NULL)
 		 	 return;
 		 	
@@ -173,16 +173,22 @@ module sendAckC {
 	 */
 
 	//If you receive a REQ, update value of counter with msg->msg_counter
-		 //Preparation of the REQ message
-		 my_msg_t* msg = (my_msg_t*)(call Packet.getPayload(&packet, sizeof(my_msg_t));
-		 if (msg == NULL)
-		 	 return;
+	//Preparation of the REQ message
+	if (len != sizeof(my_msg_t)) {return buf;}
+	else{
+		 
+	 	//Unpack message
+		my_msg_t* msg = (my_msg_t*)payload;
 
-		 if (msg->msg_type == REQ) {
-			 dbg("radio_req", "Request received!");	
-	 	   dbg_clear("radio_req", " at time %s \n", sim_time_string()); 
-       sendResp();
-		 }
+	 	if (msg->msg_type == REQ) {
+			dbg("radio_req", "Request received!");	
+	   		dbg_clear("radio_req", " at time %s \n", sim_time_string()); 
+	   		counter = msg->msg_counter;
+    		sendResp();
+	 	}
+		 	
+	 	return buf;
+	}
 		 	
   }
   
@@ -198,7 +204,7 @@ module sendAckC {
 	 * X. Use debug statement showing what's happening (i.e. message fields)
 	 */
 	 
-	 my_msg_t* msg = (my_msg_t*)(call Packet.getPayload(&packet, sizeof(my_msg_t));
+	 my_msg_t* msg = (my_msg_t*)(call Packet.getPayload(&packet, sizeof(my_msg_t)));
 	 if (msg == NULL)
 	 	return;
 	 	
@@ -215,6 +221,8 @@ module sendAckC {
 		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->msg_type);
 		 dbg_clear("radio_pack", "\t\t data: %hhu \n", msg->msg_value);
 	 }
+
+  }
 
 }
 
