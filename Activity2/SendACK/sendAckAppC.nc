@@ -21,7 +21,7 @@ implementation {
   components ActiveMessageC;
   components new TimerMilliC() as timer;
   components new FakeSensorC() as fakeSensor;
-  components new PacketAcknowledgements() as pAcks;
+  //components PacketAcknowledgements as pAcks;
 
 
 /****** INTERFACES *****/
@@ -33,11 +33,12 @@ implementation {
   //Radio Control
   App.SplitControl -> ActiveMessageC;
   App.AMSend -> AMSenderC;
-  App.Packet -> AMSenderC;
   App.Receive -> AMReceiverC;
+  App.PacketAcknowledgements -> AMSenderC.Acks;
+  //App.PacketAcknowledgements -> pAcks;
 
   //Interfaces to access package fields
-  App.PacketAcknowledgements -> pAcks;
+  App.Packet -> AMSenderC;
 
   //Timer interface
   App.MilliTimer -> timer;

@@ -13,19 +13,19 @@ module sendAckC {
 
   uses {
   /****** INTERFACES *****/
-		interface Boot; 
-
 	
-    //interfaces for communication
-	//interface for timer
-	  interface Timer<TMilli> as MilliTimer;
-    //other interfaces, if needed
- 		interface SplitControl;
-    interface Packet;
+    //interfaces for communication	
     interface AMSend;
     interface Receive;
     interface PacketAcknowledgements;
+    interface Packet;
+	
+	//interface for timer
+	interface Timer<TMilli> as MilliTimer;
     
+    //other interfaces, if needed
+ 	interface SplitControl;
+	interface Boot;     
 	
 	//interface used to perform sensor reading (to get the value from a sensor)
 	interface Read<uint16_t>;
@@ -67,11 +67,13 @@ module sendAckC {
 		 
 		 counter++;
 		 
-		 dbg("radio_req","Preparing REQ message... \n");
+		 dbg("radio_send","Preparing REQ message... \n");
 		 
 		 //Set ACK for the message
-		 if(call PacketAcknowledgements.requestAck(msg) == SUCCESS)
-		 	 dbg("ACK", "Set succesfully!\n");
+		 if(call PacketAcknowledgements.requestAck(&packet) == SUCCESS)
+		 	 dbg("radio_send", "Set succesfully!\n");
+		 else
+		 	dbg("radio_send", "Set unsuccesfully\n");
 		 
 		 //UNICAST SEND
 		 if(call AMSend.send(2, &packet,sizeof(my_msg_t)) == SUCCESS){
@@ -80,6 +82,7 @@ module sendAckC {
 		   dbg_clear("radio_pack","\t Payload Sent\n" );
 			 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->msg_type);
 			 dbg_clear("radio_pack", "\t\t counter: %hhu \n", msg->msg_counter); 
+			 dbg_clear("radio_pack", "\t\t value: %hhu \n", msg->msg_value);
 		 }
 	 }        
 
@@ -91,16 +94,16 @@ module sendAckC {
   	 * `call Read.read()` reads from the fake sensor.
   	 * When the reading is done it raise the event read one.
   	 */
-		call Read.read();
+	call Read.read();
   }
 
   //***************** Boot interface ********************//
   //Stefano
   //DONE
   event void Boot.booted() {
-		dbg("boot","Application booted.\n");
+	dbg("boot","Application booted.\n");
 	/* Fill it ... */
-		call SplitControl.start();
+	call SplitControl.start();
   }
 
   //***************** SplitControl interface ********************//
@@ -108,10 +111,10 @@ module sendAckC {
   event void SplitControl.startDone(error_t err){
     /* Fill it ... */
     //Start the MilliTimer if TOS_NODE_ID == 1
-		if(TOS_NODE_ID == 1){
-			call MilliTimer.startPeriodic( 1000 );
-			dbg("timer","Timer started.\n");
-		}
+	if(TOS_NODE_ID == 1){
+		call MilliTimer.startPeriodic( 1000 );
+		dbg("boot","Timer started.\n");
+	}
   }
   
   //DONE
@@ -134,7 +137,7 @@ module sendAckC {
 
   //********************* AMSend interface ****************//
   //Luca
-	//Done
+  //Done
   event void AMSend.sendDone(message_t* buf,error_t err) {
 	/* This event is triggered when a message is sent 
 	 *
@@ -142,22 +145,21 @@ module sendAckC {
 	 * 1. Check if the packet is sent
 	 * 2. Check if the ACK is received (read the docs)
 	 * 2a. If yes, stop the timer. The program is done
-	 * 2b. Otherwise, send again the request
+	 * 2b. Otherwise, send again the request (this is gonna happen when the timer is fired again
 	 * X. Use debug statements showing what's happening (i.e. message fields)
 	 */
-   if(&packet == buf && err == SUCCESS) {
-     dbg("radio_send", "Packet is sent!");	
-	 	 dbg_clear("radio_send", " at time %s \n", sim_time_string()); 
-	 }
+	if(&packet == buf && err == SUCCESS) {
+	     dbg("radio_send", "Packet is sent!");	
+		 dbg_clear("radio_send", " at time %s \n", sim_time_string()); 
+	 
 
-	 //Checks ACK	
-	 if(call PacketAcknowledgements.wasAcked(buf) == TRUE){
-	 	 call MilliTimer.stop();
-		 dbg("timer","Timer stopped.\n");
-	 }
-	 else{
-	   sendReq();
-   }
+		 //Checks ACK	
+		 if(call PacketAcknowledgements.wasAcked(buf) == TRUE){
+		 	 call MilliTimer.stop();
+			 dbg("boot","Timer stopped.\n");
+		 }	 
+		 
+	}
   }
 
   //***************************** Receive interface *****************//
@@ -181,9 +183,17 @@ module sendAckC {
 		my_msg_t* msg = (my_msg_t*)payload;
 
 	 	if (msg->msg_type == REQ) {
-			dbg("radio_req", "Request received!");	
-	   		dbg_clear("radio_req", " at time %s \n", sim_time_string()); 
+			dbg("radio_send", "Request received!");	
+	   		dbg_clear("radio_send", " at time %s \n", sim_time_string()); 
 	   		counter = msg->msg_counter;
+	   		
+	   		dbg("radio_pack",">>>Pack\n \t Payload length %hhu \n", call Packet.payloadLength( &packet ) );
+	   dbg_clear("radio_pack","\t Payload Received\n" );
+		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->msg_type);
+		 dbg_clear("radio_pack", "\t\t counter: %hhu \n ", msg->msg_counter);
+		 dbg_clear("radio_pack", "\t\t data: %hhu \n", msg->msg_value);
+	   		
+	   		
     		sendResp();
 	 	}
 		 	
@@ -219,6 +229,7 @@ module sendAckC {
 	   dbg("radio_pack",">>>Pack\n \t Payload length %hhu \n", call Packet.payloadLength( &packet ) );
 	   dbg_clear("radio_pack","\t Payload Sent\n" );
 		 dbg_clear("radio_pack", "\t\t type: %hhu \n ", msg->msg_type);
+		 dbg_clear("radio_pack", "\t\t counter: %hhu \n ", msg->msg_counter);
 		 dbg_clear("radio_pack", "\t\t data: %hhu \n", msg->msg_value);
 	 }
 
