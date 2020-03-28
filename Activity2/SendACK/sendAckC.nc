@@ -158,10 +158,15 @@ module sendAckC {
 			 //Checks ACK	
 			 
 			 //If it's mote #1, once message is acked, it stops sending REQ messages
-			 if(call PacketAcknowledgements.wasAcked(buf) == TRUE && TOS_NODE_ID == 1){
-			 	 call MilliTimer.stop();
-				 dbg("radio_send", "Message correctly acknowledged!\n");
-				 dbg("boot","Timer stopped.\n");
+			 if(TOS_NODE_ID == 1){
+			 	if(call PacketAcknowledgements.wasAcked(buf) == TRUE){
+			 		call MilliTimer.stop();
+				 	dbg("radio_send", "Message correctly acknowledged!\n");
+				 	dbg("boot","Timer stopped.\n");
+				}
+				else{
+					dbg("radio_send", "Message not acknowledged correctly\n");
+				}
 			 }	 
 			 
 			 //If it's mote #2 and message is not acked, it sends it again
