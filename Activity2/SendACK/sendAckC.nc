@@ -151,7 +151,7 @@ module sendAckC {
 	 */
 		dbg("radio_send", "Checking if packet is sent... \n");	
 		if(&packet == buf && err == SUCCESS) {
-			 dbg("radio_send", "Packet is sent!");	
+			 dbg("radio_send", "Packet is sent!\n");	
 			 dbg_clear("radio_send", " at time %s \n", sim_time_string()); 
 		 
 
@@ -160,16 +160,16 @@ module sendAckC {
 			 //If it's mote #1, once message is acked, it stops sending REQ messages
 			 if(call PacketAcknowledgements.wasAcked(buf) == TRUE && TOS_NODE_ID == 1){
 			 	 call MilliTimer.stop();
-				 dbg("radio_send", "Message correctly acknowledged!");
+				 dbg("radio_send", "Message correctly acknowledged!\n");
 				 dbg("boot","Timer stopped.\n");
 			 }	 
 			 
 			 //If it's mote #2 and message is not acked, it sends it again
 			 if(TOS_NODE_ID == 2){
 				if(call PacketAcknowledgements.wasAcked(buf) == TRUE)
-					dbg("radio_send", "Message correctly acknowledged!");
+					dbg("radio_send", "Message correctly acknowledged!\n");
 				else{
-					dbg("radio_send", "Message not acknowledged correctly, sending a new one");
+					dbg("radio_send", "Message not acknowledged correctly, sending a new one\n");
 					sendResp();
 				}
 				
@@ -194,7 +194,7 @@ module sendAckC {
 	//Preparation of the REQ message
 	if (len != sizeof(my_msg_t)) {
 		return buf;
-		dbg("radio_err", "unexpected length of message received!");
+		dbg("radio_err", "unexpected length of message received!\n");
 		dbg_clear("radio_send", "message of size %s received. Expected size %s \n", len, sizeof(my_msg_t));
  
   }
@@ -204,7 +204,7 @@ module sendAckC {
 		my_msg_t* msg = (my_msg_t*)payload;
 
 	 	if (msg->msg_type == REQ) {
-			dbg("radio_send", "Request received!");	
+			dbg("radio_send", "Request received!\n");	
 			dbg_clear("radio_send", " at time %s \n", sim_time_string()); 
 			counter = msg->msg_counter;
 
