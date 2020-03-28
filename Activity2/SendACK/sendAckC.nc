@@ -102,9 +102,9 @@ module sendAckC {
   //Stefano
   //DONE
   event void Boot.booted() {
-	dbg("boot","Application booted.\n");
-	/* Fill it ... */
-	call SplitControl.start();
+		dbg("boot","Application booted.\n");
+		/* Fill it ... */
+		call SplitControl.start();
   }
 
   //***************** SplitControl interface ********************//
