@@ -1,0 +1,2 @@
+Channel Num: 1066868
+Channel url: https://thingspeak.com/channels/1066868
